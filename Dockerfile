@@ -1,9 +1,18 @@
-FROM alpine/git:2.49.0 as clone
-RUN git clone --depth=1 https://github.com/ntop/ntopng.git
+FROM alpine/git:2.49.0 as source
+RUN time git clone \
+    --branch=6.4-stable \
+    https://github.com/ntop/ntopng.git
+RUN cd ntopng \
+    && git submodule init \
+    && time git submodule update --remote
+RUN cd ntopng \
+    && git checkout --detach 6ce48d83ad4fd7d39b700e1caf9aea57bf258b32
+RUN time git clone \
+    https://github.com/ntop/nDPI.git
 
 
 FROM docker.io/openwrt/sdk:latest
-COPY --from=clone /git/ntopng ntopng
+COPY --from=source /git/ntopng ntopng
 USER root
 RUN apt-get update
 
